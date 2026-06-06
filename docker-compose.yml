@@ -1,0 +1,45 @@
+version: "3.9"
+services:
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:v2.13.2
+    ports: ["5000:5000"]
+    command: >
+      mlflow server
+      --backend-store-uri sqlite:///mlflow.db
+      --default-artifact-root s3://your-bucket/mlflow
+      --host 0.0.0.0
+    volumes: ["mlflow_data:/mlflow"]
+
+  airflow:
+    image: apache/airflow:2.9.2-python3.11
+    ports: ["8080:8080"]
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    depends_on: [postgres]
+    command: standalone
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: airflow
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+    volumes: ["pg_data:/var/lib/postgresql/data"]
+
+  model_server:
+    build: .
+    ports: ["8000:8000"]
+    command: uvicorn src.serving.server:app --host 0.0.0.0 --port 8000
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    ports: ["3000:3000"]
+
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports: ["9090:9090"]
+
+volumes:
+  mlflow_data:
+  pg_data:

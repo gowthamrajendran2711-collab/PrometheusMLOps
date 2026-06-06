@@ -1,0 +1,51 @@
+name: MLOps CI/CD Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with: {python-version: "3.11", cache: pip}
+    - run: pip install -r requirements.txt
+    - run: pytest tests/ -v --tb=short
+
+  train_and_eval:
+    needs: test
+    runs-on: [self-hosted, gpu]
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Trigger training DAG
+      run: |
+        airflow dags trigger prometheus_training_pipeline \
+          --conf '{"commit": "${{ github.sha }}"}' \
+          --wait-for-completion
+    - name: Run evaluation
+      run: python -m src.eval.evaluate --compare-baseline --threshold 0.05
+    - name: Upload metrics
+      uses: actions/upload-artifact@v4
+      with:
+        name: eval-metrics
+        path: metrics/
+
+  deploy:
+    needs: train_and_eval
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+    - uses: actions/checkout@v4
+    - name: Configure kubectl
+      run: aws eks update-kubeconfig --name prometheus-production
+    - name: Helm upgrade
+      run: |
+        helm upgrade --install prometheus-serving configs/helm/prometheus-serving/ \
+          --set image.tag=${{ github.sha }} \
+          --set rollout.strategy=canary \
+          --wait --timeout=10m

@@ -1,0 +1,13 @@
+experiment_name: transformer_v2_finetune
+model: bert-base-uncased
+dataset: imdb
+num_gpus: 8
+epochs: 10
+lr: 2e-5
+batch_size: 64
+gradient_accumulation_steps: 4
+warmup_steps: 500
+weight_decay: 0.01
+fp16: true
+output_dir: artifacts/models/
+mlflow_tracking_uri: http://mlflow:5000

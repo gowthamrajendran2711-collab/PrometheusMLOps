@@ -1,0 +1,27 @@
+{
+  "experiment": "transformer_v2_finetuning",
+  "runs": 47,
+  "best_run": {
+    "run_id": "a3f8b2c1d4e5",
+    "val_accuracy": 0.923,
+    "val_loss": 0.187,
+    "training_time_hours": 4.2,
+    "gpus_used": 8,
+    "model_size_params_M": 340
+  },
+  "distributed_training": {
+    "speedup_vs_single_gpu": 7.8,
+    "gpu_utilization_pct": 91.3,
+    "communication_overhead_pct": 8.7
+  },
+  "deployment": {
+    "p50_latency_ms": 14,
+    "p95_latency_ms": 23,
+    "p99_latency_ms": 41,
+    "throughput_rps": 850
+  },
+  "cost": {
+    "spot_savings_pct": 41,
+    "total_training_cost_usd": 127.40
+  }
+}
