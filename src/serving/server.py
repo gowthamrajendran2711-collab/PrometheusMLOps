@@ -1,4 +1,3 @@
-"""FastAPI model serving endpoint with shadow deployment support"""
 import time, asyncio
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
